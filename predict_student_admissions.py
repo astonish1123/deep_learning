@@ -24,6 +24,37 @@ def error_formula(y, output):
 def error_term_formula(x, y, output):
     return (y - output)*sigmoid_prime(x)
 
+def train_nn(features, targets, epochs, learnrate):
+    np.random.seed(42)
+    n_records, n_features = features.shape
+    last_loss = None
+
+    weights = np.random.normal(scale=1/n_features**.5, size=n_features)
+
+    for e in range(epochs):
+        del_w = np.zeros(weights.shape)
+        for x, y in zip(features.values, targets):
+            output = sigmoid(np.dot(x, weights))
+            error = error_formula(y, output)
+            error_term = error_term_formula(x, y, output)
+            del_w += error_term * x
+        
+        weights += learnrate * del_w / n_records
+
+        if e % (epochs/10) == 0:
+            out = sigmoid(np.dot(features, weights))
+            loss = np.mean((out - targets)**2)
+            print("Eoch: ",e)
+            if last_loss and last_loss < loss:
+                print("Train loss: ", loss, " WARNING - Loss Increasing")
+            else:
+                print("Train loss: ", loss)
+            last_loss = loss
+            print("=========")
+    print("Finished training!")
+    return weights
+
+
 if __name__ == '__main__':
     data = pd.read_csv('student_data.csv')
     plot_points(data)
@@ -68,3 +99,8 @@ if __name__ == '__main__':
     # print(features_test[:10])
     # print(targets_test[:10])
 
+    epochs = 1000
+    learnrate = 0.5
+
+    weights = train_nn(features, targets, epochs, learnrate)
+    print(weights)
